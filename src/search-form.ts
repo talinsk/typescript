@@ -59,7 +59,7 @@ export function addFormHandlers() {
 
     const searchData: ISearchFormData = {
       city: city.value,
-      hidden: hidden.value,
+      coordinates: hidden.value,
       homy: homy.checked,
       flatRent: flatrent.checked,
       checkInDate: checkindate.value,
