@@ -1,4 +1,15 @@
 import { renderBlock } from './lib.js'
+import { getUserData, getFavoritesAmount } from './read-storage.js'
+
+
+export function renderUserBlockFromStorage() {
+  const userData = getUserData();
+  const favAmount = getFavoritesAmount();
+  if (userData != null) {
+    renderUserBlock(userData.userName, userData.avatarUrl, favAmount);
+  }
+}
+
 
 export function renderUserBlock (nameUser: string, linkAvatar: string, favoriteItemsAmount: number): void {
   const favoritesCaption = favoriteItemsAmount > 0 ? favoriteItemsAmount : 'ничего нет'

@@ -1,4 +1,6 @@
 import { renderBlock } from './lib.js'
+import { Place } from './interface/place.js'
+import { getFavoritePlaces } from './read-storage.js'
 
 export function renderSearchStubBlock (): void {
   renderBlock(
@@ -24,9 +26,56 @@ export function renderEmptyOrErrorSearchBlock (reasonMessage: string): void {
   )
 }
 
-export function renderSearchResultsBlock (): void {
+export function renderSearchResultsBlock (places: Place[]): void {
+  const favs = getFavoritePlaces();
+
+  let resPlaces: string = `<div class="search-results-header">
+                            <p>Результаты поиска</p>
+                            <div class="search-results-filter">
+                                <span><i class="icon icon-filter"></i> Сортировать:</span>
+                                <select>
+                                    <option selected="">Сначала дешёвые</option>
+                                    <option selected="">Сначала дорогие</option>
+                                    <option>Сначала ближе</option>
+                                </select>
+                            </div>
+                          </div>
+                          <ul class="results-list">`;
+
+  for (let p of places) {
+    const favorite = favs.findIndex(favPlace => favPlace.id === p.id) >= 0;
+
+    resPlaces += `
+      <li class="result">
+        <div class="result-container">
+          <div class="result-img-container">
+            <div class="favorites ${favorite ? "active" : ""}" data-place-id="${p.id}"></div>
+            <img class="result-img" src="${p.image}" alt="">
+          </div>	
+          <div class="result-info">
+            <div class="result-info--header">
+              <p>${p.name}</p>
+              <p class="price">${p.price}&#8381;</p>
+            </div>
+            <div class="result-info--map"><i class="map-icon"></i> ${p.remoteness} км от вас</div>
+            <div class="result-info--descr">${p.description}</div>
+            <div class="result-info--footer">
+              <div>
+                <button>Забронировать</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </li>
+    `
+  }
+
+  resPlaces += `</ul>`;
+  
   renderBlock(
     'search-results-block',
+    resPlaces
+    /*
     `
     <div class="search-results-header">
         <p>Результаты поиска</p>
@@ -84,5 +133,6 @@ export function renderSearchResultsBlock (): void {
       </li>
     </ul>
     `
+    */
   )
 }
