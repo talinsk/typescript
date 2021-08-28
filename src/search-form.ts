@@ -1,5 +1,10 @@
 import { renderBlock } from './lib.js'
 import { ISearchFormData } from './interface/searchformdata.js'
+import { getPlaces } from './apiFunctions.js'
+import { Place } from './interface/place.js'
+import { renderSearchResultsBlock, renderEmptyOrErrorSearchBlock } from './search-results.js'
+import { getFavoritePlaces, saveFavoritePlaces } from './read-storage.js'
+import { renderUserBlockFromStorage } from './user.js'
 
 export function renderSearchFormBlock (dateStart: Date, dateEnd: Date): void {
 
@@ -59,7 +64,7 @@ export function addFormHandlers() {
 
     const searchData: ISearchFormData = {
       city: city.value,
-      hidden: hidden.value,
+      coordinates: hidden.value,
       homy: homy.checked,
       flatRent: flatrent.checked,
       checkInDate: checkindate.value,
@@ -72,8 +77,57 @@ export function addFormHandlers() {
 }
 
 function search(f: ISearchFormData) {
-  console.log(f);
+  getPlaces(new Date(f.checkInDate), new Date(f.checkOutDate), f.maxPrice, f.coordinates)
+    .then((places: Place[]) => {
+      renderPlaces(places);
+    });
 }
+
+function renderPlaces(places: Place[]) {
+  
+  if (places.length === 0) {
+    renderEmptyOrErrorSearchBlock('No results');
+  }
+  else {  
+    renderSearchResultsBlock(places);
+  }
+  
+  setFavoriteHandlers(places);
+}
+
+function setFavoriteHandlers(places: Place[]) {
+  var els = document.getElementsByClassName("favorites");
+  for (let btn of els) {
+    btn.addEventListener( "click" , () => {
+      const id = +btn.getAttribute("data-place-id");
+      
+      const place = places.find(p => p.id === id);
+
+      toggleFavoritePlace(place);
+      renderPlaces(places);
+    });
+  }
+  
+}
+
+function toggleFavoritePlace(place: Place) {
+  const favs = getFavoritePlaces();
+  const index = favs.findIndex(f => f.id === place.id);
+  if (index >= 0) {
+    favs.splice(index, 1);
+  }
+  else {
+    favs.push({
+      id: place.id,
+      name: place.name,
+      image: place.image
+    });
+  }
+
+  saveFavoritePlaces(favs);
+  renderUserBlockFromStorage();
+}
+
 
 function formatDate(d: Date) {
 

@@ -1,6 +1,6 @@
 export interface ISearchFormData {
   city: string
-  hidden: string
+  coordinates: string
   homy: boolean
   flatRent: boolean
   checkInDate: string
