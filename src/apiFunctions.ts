@@ -3,7 +3,7 @@ import { Place } from './interface/place.js'
 
 const API_URL: string = "http://localhost:3030/";
 
-export function getPlaces(checkInDate: Date, checkOutDate: Date, maxPrice: number, coordinates: string) {
+export function getPlaces(checkInDate: Date, checkOutDate: Date, maxPrice: number, coordinates: string) : Promise<Place[] | void> {
   let url = `${API_URL}places/?coordinates=${coordinates}&checkInDate=${dateToUnixStamp(checkInDate)}&checkOutDate=${dateToUnixStamp(checkOutDate)}`;
 
   if (maxPrice) {
