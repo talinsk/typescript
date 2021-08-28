@@ -5,6 +5,7 @@ import { Place } from './interface/place.js'
 import { renderSearchResultsBlock, renderEmptyOrErrorSearchBlock } from './search-results.js'
 import { getFavoritePlaces, saveFavoritePlaces } from './read-storage.js'
 import { renderUserBlockFromStorage } from './user.js'
+import { Flat, FlatRentSdk } from './flatrent-sdk/flat-rent-sdk.js'
 
 export function renderSearchFormBlock (dateStart: Date, dateEnd: Date): void {
 
@@ -72,15 +73,63 @@ export function addFormHandlers() {
       maxPrice: Number(maxprice.value)
     }
 
-    search(searchData)
+    const promises: Promise<void | Place[]>[] = [];
+
+    if (homy.checked) {
+      const promHomy = search(searchData);
+      promises.push(promHomy);
+    }
+
+    if (flatrent.checked) {
+      const promFlat = searchFlatRent(searchData)
+                    .then(flats => flats.map(f => _flatToPlace(f)))
+                    .catch(e => console.log(e));
+
+      promises.push(promFlat);
+    }
+
+    if (promises.length === 0) {
+      return;
+    }
+
+    let places: Place[] = [];
+    Promise.all(promises.map(p => p.catch(e => <Place[]>[])))
+           .then(pls => {
+              pls.forEach(p => {  
+               if (p) {
+                places = places.concat(p);
+               }
+             });
+
+             renderPlaces(places);
+            })
   });
 }
 
-function search(f: ISearchFormData) {
-  getPlaces(new Date(f.checkInDate), new Date(f.checkOutDate), f.maxPrice, f.coordinates)
-    .then((places: Place[]) => {
-      renderPlaces(places);
-    });
+function search(f: ISearchFormData) : Promise<Place[] | void> {
+  return getPlaces(new Date(f.checkInDate), new Date(f.checkOutDate), f.maxPrice, f.coordinates);
+}
+
+function _flatToPlace(flat: Flat) : Place {
+  return {
+    id: flat.id,
+    name: flat.title,
+    description: flat.details,
+    image: flat.photos[0],
+    price: flat.totalPrice,
+    remoteness: 0
+  };
+}
+
+async function searchFlatRent(f: ISearchFormData) : Promise<Flat[]> {
+  const sdk = new FlatRentSdk();
+
+  return sdk.search({
+    city: f.city,
+    checkInDate: new Date(f.checkInDate),
+    checkOutDate: new Date(f.checkOutDate),
+    priceLimit: f.maxPrice || null
+  });
 }
 
 function renderPlaces(places: Place[]) {
